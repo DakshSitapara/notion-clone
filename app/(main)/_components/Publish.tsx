@@ -1,7 +1,7 @@
 "use client";
 
 import { Doc } from "@/convex/_generated/dataModel";
-
+import QRCode from "qrcode";
 import {
   Popover,
   PopoverTrigger,
@@ -10,7 +10,7 @@ import {
 import { useOrigin } from "@/hooks/useOrigin";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Check, Copy, Globe } from "lucide-react";
@@ -27,6 +27,23 @@ export const Publish = ({ initialData }: PublishProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const url = `${origin}/preview/${initialData._id}`;
+
+const [qrCode, setQrCode] = useState<string | null>(null);
+
+useEffect(() => {
+  if (!initialData.isPublished) {
+    setQrCode(null);
+    return;
+  }
+
+  QRCode.toDataURL(url, {
+    width: 200,
+    margin: 1,
+  })
+    .then(setQrCode)
+    .catch(console.error);
+}, [initialData.isPublished, url]);
+
 
   const onPublish = () => {
     setIsSubmitting(true);
@@ -86,6 +103,17 @@ export const Publish = ({ initialData }: PublishProps) => {
                 This note is live on the web.
               </p>
             </div>
+              {qrCode && (
+                <div className="flex justify-center">
+                <picture>
+                  <img
+                    src={qrCode}
+                    alt="QR Code"
+                    className="h-50 w-50 rounded-md border bg-white p-2"
+                  />
+                  </picture>
+                </div>
+              )}
             <div className="flex items-center">
               <input
                 value={url}
